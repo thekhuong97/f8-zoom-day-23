@@ -16,8 +16,9 @@ function openForm() {
   }, 100);
 }
 
-// Hàm đóng form
+// Hàm reset form + đóng modal
 function closeForm() {
+  todoForm.reset();
   addTaskModal.className = "modal-overlay";
 }
 
@@ -28,7 +29,7 @@ addBtn.onclick = openForm;
 closeModalBtn.onclick = closeForm;
 cancelModalBtn.onclick = closeForm;
 
-const todoTasks = [];
+const todoTasks = JSON.parse(localStorage.getItem("todoTasks")) ?? [];
 
 // Xử lý khi form submit
 todoForm.onsubmit = function (event) {
@@ -41,8 +42,10 @@ todoForm.onsubmit = function (event) {
   //   Thêm dữ liệu vào đầu mảng
   todoTasks.unshift(newTask);
 
-  // Reset form & đóng modal
-  todoForm.reset();
+  //Lưu toàn bộ danh sách task vào localStorage
+  localStorage.setItem("todoTasks", JSON.stringify(todoTasks));
+
+  // Đóng modal
   closeForm();
 
   // Cập nhật giao diện
@@ -51,6 +54,13 @@ todoForm.onsubmit = function (event) {
 
 // Hàm render giao diện
 function renderTasks(tasks) {
+  const todoList = $("#todoList");
+
+  if (!tasks.length) {
+    todoList.innerHTML = "<p>Chưa có công việc nào.</p>";
+    return;
+  }
+
   const html = tasks
     .map(
       (task) => `
@@ -83,6 +93,8 @@ function renderTasks(tasks) {
     `
     )
     .join("");
-  const todoList = $("#todoList");
   todoList.innerHTML = html;
 }
+
+//Render lần đầu để hiển thị được danh sách task lấy từ localStorage
+renderTasks(todoTasks);
