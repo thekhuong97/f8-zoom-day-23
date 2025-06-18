@@ -35,8 +35,15 @@ function closeForm() {
     delete submitBtn.dataset.original;
   }
 
+  // Cuộn lên đầu form
+  setTimeout(() => {
+    addTaskModal.querySelector(".modal").scrollTop = 0;
+  }, 300);
+
+  // Reset form về giá trị mặc định
   todoForm.reset();
 
+  // Xoá bỏ editIndex (Căn cứ để biết đã đóng form sửa)
   editIndex = null;
 }
 
@@ -72,17 +79,23 @@ todoForm.onsubmit = function (event) {
   }
 
   //Lưu toàn bộ danh sách task vào localStorage
-  localStorage.setItem("todoTasks", JSON.stringify(todoTasks));
+  saveTasks();
 
   // Đóng modal
   closeForm();
 
   // Cập nhật giao diện
-  renderTasks(todoTasks);
+  renderTasks();
 };
+
+function saveTasks() {
+  localStorage.setItem("todoTasks", JSON.stringify(todoTasks));
+}
 
 todoList.onclick = function (event) {
   const editBtn = event.target.closest(".edit-btn");
+  const deleteBtn = event.target.closest(".delete-btn");
+  const completeBtn = event.target.closest(".complete-btn");
 
   //Edit
   if (editBtn) {
@@ -113,16 +126,35 @@ todoList.onclick = function (event) {
 
     openFormModal();
   }
+
+  if (deleteBtn) {
+    const taskIndex = deleteBtn.dataset.index;
+    const task = todoTasks[taskIndex];
+
+    if (confirm(`Bạn chắc chắn muốn xoá công việc "${task.title}"?`)) {
+      todoTasks.splice(taskIndex, 1);
+      saveTasks();
+      renderTasks();
+    }
+  }
+
+  if (completeBtn) {
+    const taskIndex = completeBtn.dataset.index;
+    const task = todoTasks[taskIndex];
+    task.isCompleted = !task.isCompleted;
+    saveTasks();
+    renderTasks();
+  }
 };
 
 // Hàm render giao diện
-function renderTasks(tasks) {
-  if (!tasks.length) {
+function renderTasks() {
+  if (!todoTasks.length) {
     todoList.innerHTML = "<p>Chưa có công việc nào.</p>";
     return;
   }
 
-  const html = tasks
+  const html = todoTasks
     .map(
       (task, index) => `
             <div class="task-card ${task.color} ${
@@ -137,11 +169,11 @@ function renderTasks(tasks) {
                   <i class="fa-solid fa-pen-to-square fa-icon"></i>
                   Edit
                 </div>
-                <div class="dropdown-item complete">
+                <div class="dropdown-item complete-btn" data-index="${index}">
                   <i class="fa-solid fa-check fa-icon"></i>
                   ${task.isCompleted ? "Mark as Active" : "Mark as Complete"}
                 </div>
-                <div class="dropdown-item delete">
+                <div class="dropdown-item delete delete-btn" data-index="${index}">
                   <i class="fa-solid fa-trash fa-icon"></i>
                   Delete
                 </div>
@@ -158,4 +190,4 @@ function renderTasks(tasks) {
 }
 
 //Render lần đầu để hiển thị được danh sách task lấy từ localStorage
-renderTasks(todoTasks);
+renderTasks();
